@@ -4,6 +4,7 @@
 # Executables
 *.exe
 *.out
+mem
 
 # Compiled libraries
 *.a
@@ -15,3 +16,4 @@ bin/
 .history
 .vscode
 .DS_Store
+*.dSYM
