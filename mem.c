@@ -19,6 +19,7 @@ static int init_flag = 0;
 
 static int region_size = 0;
 
+// Data Structure
 struct mem_block
 {
     int usage;              // 4 bytes
@@ -29,17 +30,33 @@ struct mem_block
     void *block_addr;       // 8 bytes
 };
 
+// Prototypes
 void print_block(struct mem_block *blk);
+void *best_fit(int size);
+void *worst_fit(int size);
+void *first_fit(int size);
+void *try_fit(struct mem_block *blk, int size, int style);
+void coalescing(struct mem_block *blk);
+int region_empty();
+void *get_block_from_ref(void *target);
+void traverse_blocks();
+int initialize();
+int align_memory(int region_sz, int blk_sz);
+void advance_next_available(int size);
 
+// Implementation
 void *best_fit(int size)
 {
     struct mem_block *current = block_head;
     struct mem_block *best_fit = NULL;
-    while (current != NULL && current->usage == 1 && current->request_sz < size)
+    while (current != NULL)
     {
-        if (best_fit == NULL || current->request_sz < best_fit->request_sz)
+        if (current->usage == 0 && current->request_sz >= size)
         {
-            best_fit = current;
+            if (best_fit == NULL || current->request_sz < best_fit->request_sz)
+            {
+                best_fit = current;
+            }
         }
         current = current->next;
     }
@@ -50,11 +67,15 @@ void *worst_fit(int size)
 {
     struct mem_block *current = block_head;
     struct mem_block *worst_fit = NULL;
-    while (current != NULL && current->usage == 1 && current->request_sz < size)
+    while (current != NULL)
     {
-        if (worst_fit == NULL || current->request_sz > worst_fit->request_sz)
+        if (current->usage == 0 && current->request_sz >= size)
         {
-            worst_fit = current;
+
+            if (worst_fit == NULL || current->request_sz > worst_fit->request_sz)
+            {
+                worst_fit = current;
+            }
         }
         current = current->next;
     }
@@ -64,9 +85,17 @@ void *worst_fit(int size)
 void *first_fit(int size)
 {
     struct mem_block *current = block_head;
-    while (current != NULL && current->usage == 1 && current->request_sz < size)
+    struct mem_block *first_fit = NULL;
+    while (current != NULL)
+    {
+        if (current->usage == 0 && current->request_sz > size)
+        {
+            first_fit = current;
+            return first_fit;
+        }
         current = current->next;
-    return current;
+    }
+    return first_fit;
 }
 
 void *try_fit(struct mem_block *blk, int size, int style)
@@ -80,7 +109,6 @@ void *try_fit(struct mem_block *blk, int size, int style)
             blk->usage = 1;
             blk->data_sz = size;
             blk->block_addr = (char *)blk + sizeof(struct mem_block);
-            return blk->block_addr;
         }
         break;
     case M_WORSTFIT:
@@ -90,7 +118,6 @@ void *try_fit(struct mem_block *blk, int size, int style)
             blk->usage = 1;
             blk->data_sz = size;
             blk->block_addr = (char *)blk + sizeof(struct mem_block);
-            return blk->block_addr;
         }
         break;
     case M_FIRSTFIT:
@@ -100,7 +127,6 @@ void *try_fit(struct mem_block *blk, int size, int style)
             blk->usage = 1;
             blk->data_sz = size;
             blk->block_addr = (char *)blk + sizeof(struct mem_block);
-            return blk->block_addr;
         }
         break;
     }
@@ -291,6 +317,15 @@ int mem_free(void *ptr)
 
 void mem_dump()
 {
+    struct mem_block *current = block_head;
+    int i = 0;
+    while (current != NULL)
+    {
+        printf("Block %d @ %p\tStatus: %s\trequest:%d\tdata:%d\n", i, current, current->usage == 1 ? "Allocated" : "Free", current->request_sz, current->data_sz);
+        current = current->next;
+        i++;
+    }
+    printf("===============================\n");
 }
 
 int main()
@@ -299,16 +334,18 @@ int main()
     unsigned long *node1 = mem_alloc(sizeof(unsigned long), 0);
     memset(node1, 0, sizeof(unsigned long));
     *node1 = 1;
-    traverse_blocks();
-    unsigned long *node2 = mem_alloc(sizeof(unsigned long), 0);
-    memset(node2, 0, sizeof(unsigned long));
-    *node2 = 2;
-    traverse_blocks();
+    mem_dump();
+    // array of 10 unsigned long
+    unsigned long *node2 = mem_alloc(sizeof(unsigned long) * 10, 0);
+    memset(node2, 0, sizeof(unsigned long) * 10);
+    *node2 = 7;
+    mem_dump();
+    mem_free(node2);
+    mem_dump();
     unsigned long *node3 = mem_alloc(sizeof(unsigned long), 0);
     memset(node3, 0, sizeof(unsigned long));
     *node3 = 3;
-    traverse_blocks();
+    mem_dump();
     printf("Node 1: %lu\nNode 2: %lu\nNode 3: %lu\n", *node1, *node2, *node3);
-    mem_free(NULL);
     return 0;
 }
