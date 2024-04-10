@@ -5,6 +5,8 @@
 *.exe
 *.out
 mem
+mem-out
+test
 
 # Compiled libraries
 *.a
