@@ -144,16 +144,23 @@ void coalescing(struct mem_block *blk)
         {
             next_blk->prev = prev_blk;
         }
-        prev_blk->data_sz += blk->data_sz + sizeof(struct mem_block);
+        // prev_blk->data_sz += blk->data_sz + sizeof(struct mem_block);
+        prev_blk->data_sz = 0;
+        prev_blk->request_sz += blk->request_sz;
     }
     if (next_blk != NULL && next_blk->usage == 0)
     {
         next_blk->prev = prev_blk;
-        if (prev_blk != NULL)
+        if (next_blk ->next != NULL)
         {
-            prev_blk->next = next_blk;
+            blk->next = next_blk->next;
+            next_blk->next->prev = blk;
+        }else{
+            block_tail = blk;
         }
-        blk->data_sz += next_blk->data_sz + sizeof(struct mem_block);
+        // blk->data_sz += next_blk->data_sz + sizeof(struct mem_block);
+        blk->data_sz = 0;
+        blk->request_sz += next_blk->request_sz;
     }
 }
 
@@ -328,24 +335,37 @@ void mem_dump()
     printf("===============================\n");
 }
 
-int main()
-{
-    mem_init(4096);
-    unsigned long *node1 = mem_alloc(sizeof(unsigned long), 0);
-    memset(node1, 0, sizeof(unsigned long));
-    *node1 = 1;
-    mem_dump();
-    // array of 10 unsigned long
-    unsigned long *node2 = mem_alloc(sizeof(unsigned long) * 10, 0);
-    memset(node2, 0, sizeof(unsigned long) * 10);
-    *node2 = 7;
-    mem_dump();
-    mem_free(node2);
-    mem_dump();
-    unsigned long *node3 = mem_alloc(sizeof(unsigned long), 0);
-    memset(node3, 0, sizeof(unsigned long));
-    *node3 = 3;
-    mem_dump();
-    printf("Node 1: %lu\nNode 2: %lu\nNode 3: %lu\n", *node1, *node2, *node3);
-    return 0;
-}
+
+// TODO: remove me! I am only here for testing purposes
+// int main(void)
+// {
+//     mem_init(4096);
+//     unsigned long *node1 = mem_alloc(sizeof(unsigned long), 0);
+//     memset(node1, 0, sizeof(unsigned long));
+//     *node1 = 1;
+//     // array of 10 unsigned long
+//     unsigned long *node2 = mem_alloc(sizeof(unsigned long) * 10, 0);
+//     memset(node2, 0, sizeof(unsigned long) * 10);
+//     *node2 = 2;
+//     unsigned long *node3 = mem_alloc(sizeof(unsigned long), 0);
+//     memset(node3, 0, sizeof(unsigned long));
+//     *node3 = 3;
+//     unsigned long *node4 = mem_alloc(sizeof(unsigned long), 0);
+//     memset(node4, 0, sizeof(unsigned long));
+//     *node4 = 4;
+//     unsigned long *node5 = mem_alloc(sizeof(unsigned long), 0);
+//     memset(node5, 0, sizeof(unsigned long));
+//     *node5 = 5;
+//     mem_dump();
+//     mem_free(node3);
+//     mem_dump();
+//     mem_free(node2);
+//     mem_dump();
+//     mem_free(node4);
+//     mem_dump();
+//     mem_free(node1);
+//     mem_dump();
+//     mem_free(node5);
+//     mem_dump();
+//     return 0;
+// }

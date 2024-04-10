@@ -1,23 +1,25 @@
-# Compiler and flags
-CC = gcc
-CFLAGS = -Wall
+CC=gcc
+CFLAGS=-Wall -g
+LDFLAGS=-L./unity
+LDLIBS=-lunity
 
-# Source file
-SRCS = mem.c
-# Output
-TARGET = mem.out
+SRCS=test.c mem.c
+OBJS=$(SRCS:.c=.o)
+TARGET=test
 
-# Default target
+.PHONY: all clean run
+
 all: $(TARGET)
 
-# Rule to build the executable
-$(TARGET): $(SRCS)
-	$(CC) $(CFLAGS) $(SRCS) -o $(TARGET)
+$(TARGET): $(OBJS)
+	$(CC) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $@
 
-# Rule to run the program
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
 run: $(TARGET)
-	./$(TARGET) $(INPUT) $(OUTPUT)
+	./$(TARGET)
 
-# Rule to clean generated files
 clean:
-	rm -f $(TARGET)
+	rm -f $(OBJS) $(TARGET)
+
